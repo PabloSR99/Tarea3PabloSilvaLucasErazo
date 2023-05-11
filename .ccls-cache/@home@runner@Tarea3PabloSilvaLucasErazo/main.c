@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include "heap.h"
+#include "stack.h"
 #define barrita "\n======================================\n"
 #define barrita2 "\n--------------------------------------\n"
 
@@ -34,7 +36,7 @@ int main(void){
    
     int opcionMenu = -1;
     
-    printf("Bienvenido al control de pacientes.\n");
+    printf("Bienvenido al control de tareas\n");
         
     while (opcionMenu != 0){
         puts(barrita);
@@ -82,7 +84,7 @@ int main(void){
                     {
                 case 0: 
                     {
-                        printf("\nSaliste del juego.");
+                        printf("\nSaliste del menú.");
                         return 0;
                     }
                 default: 
