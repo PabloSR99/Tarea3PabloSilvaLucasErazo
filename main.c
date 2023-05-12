@@ -4,35 +4,61 @@
 #include <string.h>
 #include "heap.h"
 #include "stack.h"
+#define MAXCHAR 20
 #define barrita "\n======================================\n"
 #define barrita2 "\n--------------------------------------\n"
 
-void agregarTarea(){
 
+typedef struct{ 
+    char nombreTarea[MAXCHAR + 1];
+    int prioridad ;
+    char (*precedentes)[MAXCHAR + 1];
+    int contPrecedentes;
+} tipoTarea;
+
+void agregarTarea(Heap* monticulo){
+
+    tipoTarea *tarea = (tipoTarea*) malloc(sizeof(tipoTarea));
+    
+    printf("Ingrese el nombre de la tarea:\n");
+    scanf(" %[^\n]s", tarea->nombreTarea);
+    while (getchar() != '\n');
+    printf("Ingrese la prioridad de la tarea:\n");
+    scanf("%d", &tarea->prioridad);
+    tarea->precedentes = malloc(sizeof(char[MAXCHAR +1]));
+    tarea->contPrecedentes = 0;
+
+    heap_push(monticulo, tarea, tarea->prioridad);
 }
 
-void establecerPrecedencia(){
+void establecerPrecedencia(Heap* monticulo){
+
+    char tarea1;
+    c
+    printf("Ingrese el nombre de la tarea:\n");
+    scanf(" %[^\n]s", tarea->nombreTarea);
+    while (getchar() != '\n');
+}
+
+void mostrarTareas(Heap* monticulo){
     
 }
 
-void mostrarTareas(){
+void marcarTareaCompletada(Heap* monticulo){
+
+}
+
+void deshacerUltimaAccion(Heap* monticulo){
     
 }
 
-void marcarTareaCompletada(){
-
-}
-
-void deshacerUltimaAccion(){
-    
-}
-
-void importarArchivo(){
+void importarArchivo(Heap* monticulo){
     
 }
 
 int main(void){
 
+    Heap* monticulo = createHeap();
    
     int opcionMenu = -1;
     
@@ -55,31 +81,31 @@ int main(void){
             switch(opcionMenu){
                 case 1:
                     {
-                        agregarTarea();
+                        agregarTarea(monticulo);
                         break;
                     } 
                 case 2:
                     {
-                        establecerPrecedencia();
+                        establecerPrecedencia(monticulo);
                         break;
                     }
                 case 3: 
                     {
-                        mostrarTareas();
+                        mostrarTareas(monticulo);
                         break;
                     }
                 case 4: 
                     {
-                        marcarTareaCompletada();
+                        marcarTareaCompletada(monticulo);
                         break;
                     }
                 case 5: 
                     {
-                        deshacerUltimaAccion();
+                        deshacerUltimaAccion(monticulo);
                         break;
                     }
                 case 6: 
-                        importarArchivo();
+                        importarArchivo(monticulo);
                         break;
                     {
                 case 0: 
