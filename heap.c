@@ -16,14 +16,19 @@ typedef struct Heap{
   int capac;
 } Heap;
 
-
 void* heap_top(Heap* pq){
     if (pq->size == 0) 
         return NULL;
     return pq->heapArray[0].data;
 }
 
+int get_size(Heap* pq){
+    return pq->size;
+}
 
+void* get_data(Heap* pq, int pos){
+    return pq->heapArray[pos].data;
+}
 
 void heap_push(Heap* pq, void* data, int priority){
     if (pq->size == pq->capac)

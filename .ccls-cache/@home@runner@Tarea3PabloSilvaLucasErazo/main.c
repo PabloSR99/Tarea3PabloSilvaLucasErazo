@@ -14,7 +14,10 @@ typedef struct{
     int prioridad ;
     char (*precedentes)[MAXCHAR + 1];
     int contPrecedentes;
+    stack *historial;
 } tipoTarea;
+
+
 
 void agregarTarea(Heap* monticulo){
 
@@ -27,20 +30,68 @@ void agregarTarea(Heap* monticulo){
     scanf("%d", &tarea->prioridad);
     tarea->precedentes = malloc(sizeof(char[MAXCHAR +1]));
     tarea->contPrecedentes = 0;
+    tarea->historial = createStack(sizeof(char[MAXCHAR + 1]));
 
     heap_push(monticulo, tarea, tarea->prioridad);
 }
 
-void establecerPrecedencia(Heap* monticulo){
-
-    char tarea1;
+void establecerPrecedencia(Heap *monticulo){
+   
+    char tarea1[MAXCHAR +1];
+    char tarea2[MAXCHAR +1];
     
-    printf("Ingrese el nombre de la tarea:\n");
-    scanf(" %[^\n]s", tarea->nombreTarea);
+    printf("Ingrese el nombre de la tarea1:\n");
+    scanf(" %[^\n]s", tarea1);
     while (getchar() != '\n');
+    printf("Ingrese el nombre de la tarea1:\n");
+    scanf(" %[^\n]s", tarea2);
+    while (getchar() != '\n');
+    
+    int cont = get_size(monticulo);
+    printf("%d",cont);
+
+    for(int i=0;i<cont;i++){
+        
+        tipoTarea *aux = get_data(monticulo,i);
+        
+        if(strcmp(aux->nombreTarea,tarea2)==0){
+            
+            for(int f=0;f<cont;f++){
+                
+                tipoTarea *aux2 = get_data(monticulo,f);
+        
+                if(strcmp(aux2->nombreTarea,tarea1)==0){
+                    aux->precedentes = realloc(aux->precedentes,(aux->contPrecedentes+1) * sizeof(char[MAXCHAR+1]));
+                    strcpy(aux->precedentes[aux->contPrecedentes],tarea1);
+                    aux->contPrecedentes++;
+                    printf("asa");
+                }
+            }
+        }
+    }
+    
+    
 }
 
 void mostrarTareas(Heap* monticulo){
+    tipoTarea *aux = heap_top(monticulo);
+    int size = get_size(monticulo);
+    int cont = 0;
+
+    do{
+        printf("Tareas por hacer, ordenadas por prioridad y precedencia:\n");
+        printf("%d. Tarea%s (Prioridad: %d) - ", cont+1, aux->nombreTarea, aux->prioridad);
+        if (aux->contPrecedentes != 0){
+            for (int i = 0; i < aux->contPrecedentes; i++){
+                
+            }
+        }
+
+        
+        
+    }while(cont < size);
+    
+    
     
 }
 
