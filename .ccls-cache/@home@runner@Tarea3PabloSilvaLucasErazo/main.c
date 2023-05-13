@@ -69,8 +69,6 @@ void establecerPrecedencia(Heap *monticulo){
             }
         }
     }
-    
-    
 }
 
 void mostrarTareas(Heap* monticulo){
