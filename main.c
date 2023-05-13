@@ -78,19 +78,16 @@ void mostrarTareas(Heap* monticulo){
 
     do{
         printf("Tareas por hacer, ordenadas por prioridad y precedencia:\n");
-        printf("%d. Tarea%s (Prioridad: %d) - ", cont+1, aux->nombreTarea, aux->prioridad);
+        printf("%d. Tarea%s (Prioridad: %d) ", cont+1, aux->nombreTarea, aux->prioridad);
         if (aux->contPrecedentes != 0){
+            printf("- Precedente(s): ");
             for (int i = 0; i < aux->contPrecedentes; i++){
-                
+                printf("%s", aux->precedentes[i]);
             }
         }
-
-        
+        cont++;
         
     }while(cont < size);
-    
-    
-    
 }
 
 void marcarTareaCompletada(Heap* monticulo){
