@@ -3,20 +3,20 @@
 #include <stdbool.h>
 #include <string.h>
 #include "heap.h"
-#include "stack.h"
+#include "list.h"
 #define MAXCHAR 20
 #define barrita "\n======================================\n"
 #define barrita2 "\n--------------------------------------\n"
 
 
+
 typedef struct{ 
     char nombreTarea[MAXCHAR + 1];
-    int prioridad ;
+    int prioridad;
     char (*precedentes)[MAXCHAR + 1];
     int contPrecedentes;
-    stack *historial;
+    
 } tipoTarea;
-
 
 
 void agregarTarea(Heap* monticulo){
@@ -28,10 +28,7 @@ void agregarTarea(Heap* monticulo){
     while (getchar() != '\n');
     printf("Ingrese la prioridad de la tarea:\n");
     scanf("%d", &tarea->prioridad);
-    tarea->precedentes = malloc(sizeof(char[MAXCHAR +1]));
     tarea->contPrecedentes = 0;
-    tarea->historial = createStack(sizeof(char[MAXCHAR + 1]));
-
     heap_push(monticulo, tarea, tarea->prioridad);
 }
 
@@ -43,12 +40,11 @@ void establecerPrecedencia(Heap *monticulo){
     printf("Ingrese el nombre de la tarea1:\n");
     scanf(" %[^\n]s", tarea1);
     while (getchar() != '\n');
-    printf("Ingrese el nombre de la tarea1:\n");
+    printf("Ingrese el nombre de la tarea2:\n");
     scanf(" %[^\n]s", tarea2);
     while (getchar() != '\n');
     
     int cont = get_size(monticulo);
-    printf("%d",cont);
 
     for(int i=0;i<cont;i++){
         
@@ -64,7 +60,6 @@ void establecerPrecedencia(Heap *monticulo){
                     aux->precedentes = realloc(aux->precedentes,(aux->contPrecedentes+1) * sizeof(char[MAXCHAR+1]));
                     strcpy(aux->precedentes[aux->contPrecedentes],tarea1);
                     aux->contPrecedentes++;
-                    printf("asa");
                 }
             }
         }
@@ -76,17 +71,29 @@ void mostrarTareas(Heap* monticulo){
     int size = get_size(monticulo);
     int cont = 0;
 
+    printf("Tareas por hacer, ordenadas por prioridad y precedencia:\n\n");
     do{
-        printf("Tareas por hacer, ordenadas por prioridad y precedencia:\n");
-        printf("%d. Tarea%s (Prioridad: %d) ", cont+1, aux->nombreTarea, aux->prioridad);
-        if (aux->contPrecedentes != 0){
-            printf("- Precedente(s): ");
-            for (int i = 0; i < aux->contPrecedentes; i++){
-                printf("%s", aux->precedentes[i]);
-            }
+        if (aux->contPrecedentes == 0){
+            printf("%d. Tarea%s (Prioridad: %d)\n", cont+1, aux->nombreTarea, aux->prioridad);
         }
         cont++;
-        
+        aux = get_data(monticulo,cont);
+    }while(cont < size);
+
+    aux = heap_top(monticulo);
+    cont = 0;
+    
+    do{
+        if (aux->contPrecedentes != 0){
+            printf("%d. Tarea%s (Prioridad: %d) - ", cont+1, aux->nombreTarea, aux->prioridad);
+            printf("Precedente(s): ");
+            for (int i = 0; i < aux->contPrecedentes; i++){
+                printf("Tarea%s ", aux->precedentes[i]);
+            }
+            printf("\n");
+        }
+        cont++;
+        aux = get_data(monticulo,cont);
     }while(cont < size);
 }
 
@@ -107,7 +114,7 @@ int main(void){
     Heap* monticulo = createHeap();
    
     int opcionMenu = -1;
-    
+   
     printf("Bienvenido al control de tareas\n");
         
     while (opcionMenu != 0){

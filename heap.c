@@ -39,7 +39,7 @@ void heap_push(Heap* pq, void* data, int priority){
 
     int posicion = pq->size;
 
-    while(posicion > 0 && pq->heapArray[(posicion-1)/2].priority < priority)
+    while(posicion > 0 && pq->heapArray[(posicion-1)/2].priority > priority)
     {
         pq->heapArray[posicion] = pq->heapArray[(posicion-1)/2];
         posicion = (posicion - 1) / 2;
