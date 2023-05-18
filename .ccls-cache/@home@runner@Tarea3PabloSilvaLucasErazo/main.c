@@ -15,11 +15,13 @@ typedef struct{
     int prioridad;
     char (*precedentes)[MAXCHAR + 1];
     int contPrecedentes;
-    
 } tipoTarea;
 
+typedef struct{
+    Stack *ultimaAccion;
+}tipoHistorial;
 
-void agregarTarea(Heap* monticulo){
+void agregarTarea(Heap* monticulo,tipoHistorial* historial){
 
     tipoTarea *tarea = (tipoTarea*) malloc(sizeof(tipoTarea));
     
@@ -30,9 +32,11 @@ void agregarTarea(Heap* monticulo){
     scanf("%d", &tarea->prioridad);
     tarea->contPrecedentes = 0;
     heap_push(monticulo, tarea, tarea->prioridad);
+    push(historial->ultimaAccion, monticulo);
+    
 }
 
-void establecerPrecedencia(Heap *monticulo){
+void establecerPrecedencia(Heap *monticulo,tipoHistorial* historial){
    
     char tarea1[MAXCHAR +1];
     char tarea2[MAXCHAR +1];
@@ -50,20 +54,22 @@ void establecerPrecedencia(Heap *monticulo){
         
         tipoTarea *aux = get_data(monticulo,i);
         
-        if(strcmp(aux->nombreTarea,tarea2)==0){
+        if(strcmp(aux->nombreTarea,tarea1)==0){
             
             for(int f=0;f<cont;f++){
                 
                 tipoTarea *aux2 = get_data(monticulo,f);
         
-                if(strcmp(aux2->nombreTarea,tarea1)==0){
+                if(strcmp(aux2->nombreTarea,tarea2)==0){
+
                     aux->precedentes = realloc(aux->precedentes,(aux->contPrecedentes+1) * sizeof(char[MAXCHAR+1]));
-                    strcpy(aux->precedentes[aux->contPrecedentes],tarea1);
+                    strcpy(aux->precedentes[aux->contPrecedentes],tarea2);
                     aux->contPrecedentes++;
                 }
             }
         }
     }
+    push(historial->ultimaAccion, monticulo);
 }
 
 void mostrarTareas(Heap* monticulo){
@@ -82,12 +88,13 @@ void mostrarTareas(Heap* monticulo){
 
     aux = heap_top(monticulo);
     cont = 0;
-    
     do{
         if (aux->contPrecedentes != 0){
+           
             printf("%d. Tarea%s (Prioridad: %d) - ", cont+1, aux->nombreTarea, aux->prioridad);
             printf("Precedente(s): ");
-            for (int i = 0; i < aux->contPrecedentes; i++){
+               
+           for (int i = 0; i < aux->contPrecedentes; i++){
                 printf("Tarea%s ", aux->precedentes[i]);
             }
             printf("\n");
@@ -97,21 +104,84 @@ void mostrarTareas(Heap* monticulo){
     }while(cont < size);
 }
 
-void marcarTareaCompletada(Heap* monticulo){
+void marcarTareaCompletada(Heap* monticulo,tipoHistorial* historial){
+    char tarea1[MAXCHAR +1];
+    printf("Ingrese el nombre de la tarea1:\n");
+    scanf(" %[^\n]s", tarea1);
+    while (getchar() != '\n');
 
+
+    push(historial->ultimaAccion, monticulo);
 }
 
-void deshacerUltimaAccion(Heap* monticulo){
+void deshacerUltimaAccion(Heap* monticulo,tipoHistorial* historial){
+
+    pop(historial->ultimaAccion);
+    monticulo=NULL;
+    monticulo=top(historial->ultimaAccion);
     
 }
 
 void importarArchivo(Heap* monticulo){
+
+    tipoTarea *tarea;
+    char nombreArchivoImport[MAXCHAR + 1];
+    printf("Ingrese el nombre del archivo.csv del que se importarán las tareas.\n");
+    scanf("%20[^\n]s", nombreArchivoImport);
+    printf("a");
+    while(getchar() != '\n');
     
+    FILE* file = fopen(nombreArchivoImport, "r");
+    if (file == NULL){
+        printf("No existe el archivo");
+        return;
+    }
+    char *titular = (char*) malloc(sizeof(char)*MAXCHAR*5);
+    bool indicadorFinArchivo = false;
+    char caracterAux;
+    char numero[MAXCHAR];
+    int cont = 0;
+    fscanf(file,"%[^\n]s",titular);
+    printf("%s",titular);
+    while (fgetc(file) != '\n');
+
+    tarea = (tipoTarea*) malloc(sizeof(tipoTarea));
+    printf("a");
+    
+    while (!indicadorFinArchivo){
+        printf("a");
+        fscanf(file, "%20[^,]s", tarea->nombreTarea);
+        while (fgetc(file) != ',');
+        fgetc(file);
+        fscanf(file, "%19[^,]s", numero);
+        tarea->prioridad = atoi(numero);
+        printf("%d", tarea->prioridad);
+        while (fgetc(file) != ',');
+        cont=0;
+        while(fgetc(file) != '\n'){
+            tarea->precedentes = realloc(tarea->precedentes, sizeof(char[MAXCHAR + 1]) * tarea->contPrecedentes+1);
+            fscanf(file, "%[^ ]s", tarea->precedentes[cont]);
+            cont++;
+        }
+        tarea->contPrecedentes=cont;
+        
+        heap_push(monticulo, tarea, tarea->prioridad);
+
+        while (caracterAux != '\n' && caracterAux != EOF)
+        {
+            caracterAux = fgetc(file);
+            if (caracterAux == EOF)
+                indicadorFinArchivo = true;
+        }
+    }
+    fclose(file);
 }
 
 int main(void){
 
     Heap* monticulo = createHeap();
+    tipoHistorial* historial = malloc (sizeof(tipoHistorial));
+    historial->ultimaAccion = createStack(sizeof(Heap*));
    
     int opcionMenu = -1;
    
@@ -130,16 +200,17 @@ int main(void){
         printf("0.- Salir del menú\n");
         printf("Indique la opcion: \n");
         scanf("%d", &opcionMenu);
+        while(getchar() != '\n');
 
             switch(opcionMenu){
                 case 1:
                     {
-                        agregarTarea(monticulo);
+                        agregarTarea(monticulo,historial);
                         break;
                     } 
                 case 2:
                     {
-                        establecerPrecedencia(monticulo);
+                        establecerPrecedencia(monticulo,historial);
                         break;
                     }
                 case 3: 
@@ -149,12 +220,12 @@ int main(void){
                     }
                 case 4: 
                     {
-                        marcarTareaCompletada(monticulo);
+                        marcarTareaCompletada(monticulo,historial);
                         break;
                     }
                 case 5: 
                     {
-                        deshacerUltimaAccion(monticulo);
+                        deshacerUltimaAccion(monticulo,historial);
                         break;
                     }
                 case 6: 
@@ -172,7 +243,9 @@ int main(void){
                         break;
                     }
             }
+             
         }
+        opcionMenu=-1;
     }
     return 0;
 }
