@@ -20,14 +20,9 @@ void minus_size(Heap* pq){
     pq->size--;
 }
 
-/*void eliminar(Heap* pq, void* data){
-    for (int i = 0; i < pq->size; i++){
-        if (pq->heapArray[i].data == data){
-            pq->heapArray[i] = pq->heapArray[i+1];
-            if (i+1 == pq->size) break;
-        }
-    }
-}*/
+int get_capac(Heap* pq){
+    return pq->capac;
+}
 
 int get_size(Heap* pq){
     return pq->size;
