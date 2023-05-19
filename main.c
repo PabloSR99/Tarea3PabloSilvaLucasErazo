@@ -7,6 +7,7 @@
 #define MAXCHAR 20
 #define barrita "\n======================================\n"
 #define barrita2 "\n--------------------------------------\n"
+#define confirmar(cad) (strcmp(cad, "Si") == 0 || strcmp(cad, "SI") == 0 || strcmp(cad, "si") == 0 || strcmp(cad, "sI") == 0)
 
 
 
@@ -28,6 +29,16 @@ void agregarTarea(Heap* monticulo,tipoHistorial* historial){
     printf("Ingrese el nombre de la tarea:\n");
     scanf(" %[^\n]s", tarea->nombreTarea);
     while (getchar() != '\n');
+    
+    int cont=get_size(monticulo);
+    for(int i=0;i<cont;i++){
+        tipoTarea *aux = get_data(monticulo,i);
+        if(strcmp(aux->nombreTarea,tarea->nombreTarea)==0){
+            printf("ya existe esta tarea.\n");
+            return;
+        }
+        
+    }
     printf("Ingrese la prioridad de la tarea:\n");
     scanf("%d", &tarea->prioridad);
     tarea->contPrecedentes = 0;
@@ -40,7 +51,7 @@ void establecerPrecedencia(Heap *monticulo,tipoHistorial* historial){
    
     char tarea1[MAXCHAR +1];
     char tarea2[MAXCHAR +1];
-    
+    bool valido=false;
     printf("Ingrese el nombre de la tarea1:\n");
     scanf(" %[^\n]s", tarea1);
     while (getchar() != '\n');
@@ -61,13 +72,17 @@ void establecerPrecedencia(Heap *monticulo,tipoHistorial* historial){
                 tipoTarea *aux2 = get_data(monticulo,f);
         
                 if(strcmp(aux2->nombreTarea,tarea2)==0){
-
-                    aux->precedentes = realloc(aux->precedentes,(aux->contPrecedentes+1) * sizeof(char[MAXCHAR+1]));
-                    strcpy(aux->precedentes[aux->contPrecedentes],tarea2);
-                    aux->contPrecedentes++;
+                    aux2->precedentes = realloc(aux2->precedentes,(aux2->contPrecedentes+1) * sizeof(char[MAXCHAR+1]));
+                    strcpy(aux2->precedentes[aux2->contPrecedentes],tarea1);
+                    aux2->contPrecedentes++;
+                    valido=true;
                 }
             }
         }
+    }
+    if(valido==false){
+        printf("No es posible hacer esto\n");
+        return;
     }
     push(historial->ultimaAccion, monticulo);
 }
@@ -75,12 +90,13 @@ void establecerPrecedencia(Heap *monticulo,tipoHistorial* historial){
 void mostrarTareas(Heap* monticulo){
     tipoTarea *aux = heap_top(monticulo);
     int size = get_size(monticulo);
-    int cont = 0;
-
+    int cont = 0, posiciones = 1;
+    
     printf("Tareas por hacer, ordenadas por prioridad y precedencia:\n\n");
     do{
         if (aux->contPrecedentes == 0){
-            printf("%d. Tarea%s (Prioridad: %d)\n", cont+1, aux->nombreTarea, aux->prioridad);
+            printf("%d. Tarea%s (Prioridad: %d)\n", posiciones, aux->nombreTarea, aux->prioridad);
+            posiciones++;
         }
         cont++;
         aux = get_data(monticulo,cont);
@@ -88,13 +104,13 @@ void mostrarTareas(Heap* monticulo){
 
     aux = heap_top(monticulo);
     cont = 0;
+    posiciones = 1;
     do{
         if (aux->contPrecedentes != 0){
-           
-            printf("%d. Tarea%s (Prioridad: %d) - ", cont+1, aux->nombreTarea, aux->prioridad);
+            printf("%d. Tarea%s (Prioridad: %d) - ", posiciones, aux->nombreTarea, aux->prioridad);
+            posiciones++;
             printf("Precedente(s): ");
-               
-           for (int i = 0; i < aux->contPrecedentes; i++){
+            for (int i = 0; i < aux->contPrecedentes; i++){
                 printf("Tarea%s ", aux->precedentes[i]);
             }
             printf("\n");
@@ -104,21 +120,69 @@ void mostrarTareas(Heap* monticulo){
     }while(cont < size);
 }
 
+void borrarDePrecedentes(Heap* monticulo,char* tarea){
+
+    int cont=get_size(monticulo);
+
+    for(int i=0;i<cont;i++){
+
+        tipoTarea *aux = get_data(monticulo,i);
+
+        if(aux->contPrecedentes!=0){
+
+            for(int c=0;c<aux->contPrecedentes;c++){
+                if(strcmp(aux->precedentes[c],tarea)==0){
+                    for(;c<aux->contPrecedentes;c++){
+                         strcpy(aux->precedentes[c], aux->precedentes[c+1]);
+                    }
+                    aux->contPrecedentes--;
+                }
+            }
+        }
+    }
+}
+
 void marcarTareaCompletada(Heap* monticulo,tipoHistorial* historial){
-    char tarea1[MAXCHAR +1];
-    printf("Ingrese el nombre de la tarea1:\n");
-    scanf(" %[^\n]s", tarea1);
+    
+    char tarea[MAXCHAR +1];
+    bool valido=false;
+    char respuesta[3];
+    printf("Ingrese el nombre de la tarea:\n");
+    scanf(" %[^\n]s", tarea);
     while (getchar() != '\n');
 
+    int cont = get_size(monticulo);
+
+    for(int i=0;i<cont;i++){
+
+        tipoTarea *aux2 = get_data(monticulo,i);
+    
+        if(strcmp(aux2->nombreTarea,tarea)==0){
+            valido=true;
+            printf("Seguro que quieres borrar la tarea\n");
+            scanf("%2s",respuesta);
+            while (getchar() != '\n');
+            if (!confirmar(respuesta)){
+                printf("No se borro la tarea");
+                return;
+            }else{
+                heap_pop(monticulo, i);
+                borrarDePrecedentes(monticulo,tarea);
+            }
+        }    
+    }
+    if(valido==false){
+        printf("La tarea no existe\n");
+        return;
+    }
 
     push(historial->ultimaAccion, monticulo);
 }
 
-void deshacerUltimaAccion(Heap* monticulo,tipoHistorial* historial){
-
+Heap *deshacerUltimaAccion(Heap* monticulo,tipoHistorial* historial){
+    //usar la pila , y llevar al top a las funciones como aux y despues insertarl al top
     pop(historial->ultimaAccion);
-    monticulo=NULL;
-    monticulo=top(historial->ultimaAccion);
+    return top(historial->ultimaAccion);
     
 }
 
@@ -225,7 +289,12 @@ int main(void){
                     }
                 case 5: 
                     {
-                        deshacerUltimaAccion(monticulo,historial);
+                        monticulo=deshacerUltimaAccion(monticulo,historial);
+                        free(monticulo);
+                        monticulo=malloc(monticulo,sizeof(Heap)*top(historial->ultimaAccion));
+                        if(monticulo==NULL){
+                            monticulo=createHeap();
+                        }
                         break;
                     }
                 case 6: 
@@ -244,7 +313,7 @@ int main(void){
                     }
             }
              
-        }
+            }
         opcionMenu=-1;
     }
     return 0;
