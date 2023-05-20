@@ -41,6 +41,7 @@ void agregarTarea(Heap* monticulo,Stack* historial){
     }
     printf("Ingrese la prioridad de la tarea:\n");
     scanf("%d", &tarea->prioridad);
+    tarea->prioridad*=(-1);
     tarea->contPrecedentes = 0;
     heap_push(monticulo, tarea, tarea->prioridad);
    
@@ -98,13 +99,57 @@ void establecerPrecedencia(Heap *monticulo,Stack* historial){
 
 }
 
+/*char* copiar_Precedentes(tipoTarea* tarea){
+    char (*copia) = (char*)realloc(tarea->precedentes,(tarea->contPrecedentes+1) * sizeof(char[MAXCHAR+1]));
+
+    for (int i = 0; i < tarea->contPrecedentes; i++){
+        strcpy(copia[i],tarea->precedentes[i]);
+    }
+    return copia;
+}*/
+
 void mostrarTareas(Heap* monticulo){
+
+    /*Heap* copia = heap_clone(monticulo);
+    Heap* copia2 = heap_clone(monticulo);
+     int posicion = 0;
+    while((heap_top(copia))!=NULL){
+
+        tipoTarea* tarea=(tipoTarea*)heap_top(copia);
+        
+        if(tarea->contPrecedentes==0){
+            printf("%d. Tarea%s (Prioridad: %d)\n", posicion+1, tarea->nombreTarea, (tarea->prioridad)*(-1));
+            posicion++;
+        }
+        heap_pop(copia, 0);
+    }
+
+    while((heap_top(copia2))!=NULL){
+
+        tipoTarea* tarea=(tipoTarea*)heap_top(copia);
+        //char *copiaArreglo= copiar_Precedentes(tarea);
+        if(tarea->contPrecedentes!=0){
+            printf("%d. Tarea%s (Prioridad: %d)", posicion+1, tarea->nombreTarea, (tarea->prioridad)*(-1));
+            printf("Precedente(s): ");
+            posicion++;
+            for(int i=0;i<tarea->contPrecedentes;i++){
+                 printf("Tarea %s ", tarea->precedentes[i]);
+            }
+        }
+        heap_pop(copia2, 0);
+    }
+
+    printf("\n");
+    free(copia);
+    free(copia2);*/
+
+    Heap* copia = heap_clone(monticulo);
     int size = get_size(monticulo);
 
     if(size == 0)
         return;
 
-    tipoTarea *aux = heap_top(monticulo);
+    tipoTarea *aux = heap_top(copia);
     int cont = 0;
     int posicion = 0;
 
@@ -112,22 +157,22 @@ void mostrarTareas(Heap* monticulo){
 
     do {
         if (aux->contPrecedentes == 0){
-            printf("%d. Tarea%s (Prioridad: %d)%d\n", posicion, aux->nombreTarea, aux->prioridad,aux->contPrecedentes);
+            printf("%d. Tarea%s (Prioridad: %d)\n", posicion+1, aux->nombreTarea, (aux->prioridad));
             
             posicion++;
         }
         cont++;
-        aux = get_data(monticulo, cont);
+        heap_pop(copia, 0);
+        aux = heap_top(copia);
     } while (cont < size);
 
     aux = heap_top(monticulo);
     cont = 0;
-    posicion = 0;
 
     do {
         if (aux->contPrecedentes != 0){
             
-            printf("%d. Tarea%s (Prioridad: %d) - %d", posicion, aux->nombreTarea, aux->prioridad,aux->contPrecedentes);
+            printf("%d. Tarea%s (Prioridad: %d)", posicion, aux->nombreTarea, aux->prioridad);
             printf("Precedente(s): ");
             for (int i = 0; i < aux->contPrecedentes; i++){
                 printf("Tarea %s ", aux->precedentes[i]);
@@ -136,7 +181,8 @@ void mostrarTareas(Heap* monticulo){
             posicion++;
         }
         cont++;
-        aux = get_data(monticulo, cont);
+        heap_pop(monticulo, 0);
+        aux = heap_top(monticulo);
     } while (cont < size);
 }
 
@@ -192,7 +238,7 @@ void marcarTareaCompletada(Heap* monticulo,Stack* historial){
                 nodoHistorial->ultimaAccion = 3;
                 nodoHistorial->tarea = aux;
                 push(historial, nodoHistorial);
-                heap_pop(monticulo, i);
+                heap_pop(monticulo,i);
                 borrarDePrecedentes(monticulo,tarea);
             }
         }    
@@ -220,7 +266,7 @@ void deshacerUltimaAccion(Heap* monticulo, Stack* historial){
                     for (int i = 0; i < cont; i++){
                         tipoTarea *aux = get_data(monticulo, i);
                         if (strcmp(aux->nombreTarea, ultimo->tarea->nombreTarea)){
-                            heap_pop(monticulo, i);
+                            heap_pop(monticulo,i);
                         }
                     }
                     pop(historial);
@@ -258,57 +304,7 @@ void deshacerUltimaAccion(Heap* monticulo, Stack* historial){
     }
 }
 
-
-
-void importarArchivo(Heap* monticulo) {
-    char nombreArchivoImport[MAXCHAR + 1];
-    printf("Ingrese el nombre del archivo.csv del que se importarán las tareas.\n");
-    scanf("%[^\n]s", nombreArchivoImport);
-    while (getchar() != '\n');
-
-    FILE* file = fopen(nombreArchivoImport, "r");
-    if (file == NULL) {
-        printf("Error al abrir el archivo\n");
-        return;
-    }
-    
-    char lineaArchivo[1024];
-    fgets(lineaArchivo, sizeof(lineaArchivo), file); // Ignorar la línea de título
-
-    while (fgets(lineaArchivo, sizeof(lineaArchivo), file)) {
-        tipoTarea* tarea = (tipoTarea*) malloc(sizeof(tipoTarea));
-        char *item;
-
-        item = strtok(lineaArchivo, ",");
-        if (item == NULL) {
-            free(tarea);
-            continue;
-        }
-        strcpy(tarea->nombreTarea, item);
-
-        item = strtok(NULL, ",");
-        if (item == NULL) {
-            free(tarea);
-            continue;
-        }
-        tarea->prioridad = atoi(item);
-        int aux=0;
-        tarea->precedentes = NULL;
-        
-        while ((item = strtok(NULL, " ,\n")) != NULL) {
-            tarea->precedentes = realloc(tarea->precedentes, sizeof(char*) * (tarea->contPrecedentes + 1));
-            strcpy(tarea->precedentes[tarea->contPrecedentes], strdup(item));
-
-            aux++;
-            tarea->contPrecedentes=aux;
-        }
-
-        heap_push(monticulo, tarea, tarea->prioridad);
-    }
-
-    fclose(file);
-}
-char *gets_csv_field(char *tmp, int k) //
+char *gets_csv_field(char *tmp, int k) 
 {
   int open_mark = 0;
   char *ret = (char*) malloc(100 * sizeof(char));
@@ -360,6 +356,53 @@ char *gets_csv_field(char *tmp, int k) //
   }
   
   return NULL;
+}
+void importarArchivo(Heap* monticulo) {
+    
+    char nombreArchivoImport[MAXCHAR + 1];
+    printf("Ingrese el nombre del archivo.csv del que se importarán las tareas.\n");
+    scanf("%[^\n]s", nombreArchivoImport);
+    while (getchar() != '\n');
+
+    FILE* file = fopen(nombreArchivoImport, "r");
+    if (file == NULL) {
+        printf("Error al abrir el archivo\n");
+        return;
+    }
+    
+    char lineaArchivo[1024];
+    fgets(lineaArchivo, 1023, file); // Ignorar la línea de título
+    while (fgets(lineaArchivo,1023, file)!=NULL) {
+        tipoTarea* tarea = (tipoTarea*) malloc(sizeof(tipoTarea));
+        
+        for(int i=0;i<3;i++){
+
+            char *aux=gets_csv_field(lineaArchivo,i);
+            
+            if(i==0){
+                strcpy(tarea->nombreTarea,aux);
+            }
+
+            if(i==1){
+                tarea->prioridad=atol(aux);
+            }
+            
+            if(i==2){
+                if(strlen(aux)>1){
+                    char delimit[]=" \t\r\v\n\f";
+                    char*auxPrecedentes=strtok(aux,delimit);
+                    
+                    while(auxPrecedentes!=NULL){
+                        tarea->precedentes = realloc(tarea->precedentes, sizeof(char*) * (tarea->contPrecedentes + 1));
+                        strcpy(tarea->precedentes[tarea->contPrecedentes],auxPrecedentes);
+                        tarea->contPrecedentes++;
+                        auxPrecedentes=strtok(NULL,delimit);
+                    }
+                }
+            }
+        }
+        heap_push(monticulo, tarea, tarea->prioridad);
+    }
 }
 
 int main(void){

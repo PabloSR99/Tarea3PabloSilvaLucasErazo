@@ -16,14 +16,6 @@ typedef struct Heap{
   int capac;
 } Heap;
 
-void minus_size(Heap* pq){
-    pq->size--;
-}
-
-int get_capac(Heap* pq){
-    return pq->capac;
-}
-
 int get_size(Heap* pq){
     return pq->size;
 }
@@ -32,6 +24,24 @@ void* get_data(Heap* pq, int pos){
     return pq->heapArray[pos].data;
 }
 
+Heap* heap_clone(Heap *pq)
+{
+  if (pq == NULL) return NULL;
+
+  Heap *clon = createHeap();
+  clon->size = pq->size;
+  clon->capac = pq->capac;
+
+  clon->heapArray = (heapElem*) malloc(sizeof(heapElem) * pq->capac);
+
+  int i;
+  for (i = 0; i < pq->size; i++) 
+  {
+    clon->heapArray[i] = pq->heapArray[i];
+  }
+
+  return clon;
+}
 void* heap_top(Heap* pq){
     if(pq->size==0) return NULL;
     return pq->heapArray[0].data;
@@ -48,7 +58,7 @@ void heap_push(Heap* pq, void* data, int priority){
 
     /*Flotación*/
     int now = pq->size;
-    while(now>0 && pq->heapArray[(now-1)/2].priority > priority)   
+    while(now>0 && pq->heapArray[(now-1)/2].priority > priority)
         {
                 pq->heapArray[now] = pq->heapArray[(now-1)/2];
                 now = (now -1)/2;
@@ -59,18 +69,18 @@ void heap_push(Heap* pq, void* data, int priority){
 }
 
 
-void heap_pop(Heap* pq , int i){
+void heap_pop(Heap* pq, int i){
 
         pq->size--;
         pq->heapArray[i] = pq->heapArray[pq->size];
-        int priority=pq->heapArray[0].priority;
+        int priority=pq->heapArray[i].priority;
 
         
         int now = 1;
         
         while((now<=pq->size && pq->heapArray[now].priority < priority) || (now+1<=pq->size && pq->heapArray[now+1].priority < priority)){
           heapElem tmp=pq->heapArray[(now-1)/2];
-          if(now+1<=pq->size && pq->heapArray[now].priority < pq->heapArray[now+1].priority) now++;
+          if(now+1<=pq->size && pq->heapArray[now].priority > pq->heapArray[now+1].priority) now++;
 
           pq->heapArray[(now-1)/2]=pq->heapArray[now];
           pq->heapArray[now]=tmp;

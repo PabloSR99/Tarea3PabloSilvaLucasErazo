@@ -8,8 +8,8 @@ void* heap_top(Heap* pq);
 int get_size(Heap* pq);
 void* get_data(Heap* pq, int pos);
 void heap_push(Heap* pq, void* data, int priority);
-void heap_pop(Heap* pq, int i);
-Heap* heap_clone(Heap* pq);
+void heap_pop(Heap* pq);
+Heap* copia(Heap* pq);
 
 #endif /* Heap_h */
 
