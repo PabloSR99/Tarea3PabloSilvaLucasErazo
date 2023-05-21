@@ -30,7 +30,7 @@ Lucas Erazo.
 
 Puntajes Total = 95
 
-Aspectos positivos: Siempre motivado a trabajar.
+Aspectos positivos: Siempre motivado a trabajar,buena comunicacion.
 Aspectos negativos: mejorar en la solucion de problemas. 
 
 Pablo Silva.
