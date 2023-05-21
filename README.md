@@ -42,7 +42,7 @@ Pablo Silva.
 
 Puntaje Total = 95
 
-Aspectos positivos:generar buen ambiente de trabajo,buena soluciuon de probemas.
+Aspectos positivos:generar buen ambiente de trabajo,buena solucion de problemas.
 Aspectos negativos:se toma muchas pausas.
 
 Uso de herramientas: Utilizamos replit por la facilidad de crear la tarea con el uso del trabajo colaborativo y GitHub para los commits.
