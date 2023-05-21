@@ -10,6 +10,5 @@ void* get_data(Heap* pq, int pos);
 void heap_push(Heap* pq, void* data, int priority);
 void heap_pop(Heap* pq, int i);
 Heap* heap_clone(Heap* pq);
-
 #endif /* Heap_h */
 

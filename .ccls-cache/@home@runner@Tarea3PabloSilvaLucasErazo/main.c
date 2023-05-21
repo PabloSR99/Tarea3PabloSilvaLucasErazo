@@ -8,54 +8,53 @@
 #define barrita "\n======================================\n"
 #define barrita2 "\n--------------------------------------\n"
 #define confirmar(cad) (strcmp(cad, "Si") == 0 || strcmp(cad, "SI") == 0 || strcmp(cad, "si") == 0 || strcmp(cad, "sI") == 0)
-
+//structs para las tareas del monticulo
 typedef struct{ 
     char nombreTarea[MAXCHAR + 1];
     int prioridad;
-    char (*precedentes)[MAXCHAR + 1];
-    int contPrecedentes;
+    List* precedentes;
+    bool hayPrecedentes;
 } tipoTarea;
-
+//struct para el historial de acciones incluida en las funciones 1, 2 y 4.
 typedef struct{
     int ultimaAccion;
     tipoTarea *tarea;
 }tipoHistorial;
+/*En la funcion agregarTarea se crea y se inicializan los datos de una tarea en una variable auxiliar,para luego ser insertados en el monticulo*/
+void agregarTarea(Heap* monticulo,List* historial){
 
-void agregarTarea(Heap* monticulo,Stack* historial){
-
-    tipoTarea *tarea = (tipoTarea*) malloc(sizeof(tipoTarea));
-    tipoHistorial *nodoHistorial = malloc (sizeof(tipoHistorial));
+    tipoTarea *tarea = (tipoTarea*) malloc(sizeof(tipoTarea));//variable auxiliar
+    tipoHistorial *nodoHistorial1 = malloc (sizeof(tipoHistorial));
     
     printf("Ingrese el nombre de la tarea:\n");
     scanf(" %[^\n]s", tarea->nombreTarea);
     while (getchar() != '\n');
     
-    int cont=get_size(monticulo);
+    int cont=get_size(monticulo);//se accede al size del monticulo
     for(int i=0;i<cont;i++){
         tipoTarea *aux = get_data(monticulo,i);
         if(strcmp(aux->nombreTarea,tarea->nombreTarea)==0){
             printf("ya existe esta tarea.\n");
             return;
         }
-        
     }
     printf("Ingrese la prioridad de la tarea:\n");
     scanf("%d", &tarea->prioridad);
-    tarea->prioridad*=(-1);
-    tarea->contPrecedentes = 0;
-    heap_push(monticulo, tarea, tarea->prioridad);
+    tarea->hayPrecedentes = false;
+    tarea->precedentes = createList();
+    heap_push(monticulo, tarea, tarea->prioridad);//se inserta el auxiiar en el monticulo
    
-    nodoHistorial->ultimaAccion = 1;
-    nodoHistorial->tarea = tarea;
-    push(historial, nodoHistorial);
+    nodoHistorial1->ultimaAccion = 1;
+    nodoHistorial1->tarea = tarea;
+    pushFront(historial, nodoHistorial1);//se inseerta la accion en la pila de acciones
 }
-
-void establecerPrecedencia(Heap *monticulo,Stack* historial){
+/*En esta funcion se le asignara una precedencia de "Tarea 1" a "Tarea 2", es decir que para hacer la "Tarea 2" hay que hacer antes la "Tarea 1". Guardamos los nombres de las tareas en variables char y los buscamos dentro del monticulo para asignarlo a la lista correspondiente*/
+void establecerPrecedencia(Heap *monticulo, List* historial){
 
     
     tipoTarea *aux = malloc(sizeof(tipoTarea));
     tipoTarea *aux2 = malloc(sizeof(tipoTarea));
-    tipoHistorial *nodoHistorial = malloc (sizeof(tipoHistorial));
+    tipoHistorial *nodoHistorial2 = malloc (sizeof(tipoHistorial));
     
     char tarea1[MAXCHAR +1];
     char tarea2[MAXCHAR +1];
@@ -68,7 +67,7 @@ void establecerPrecedencia(Heap *monticulo,Stack* historial){
     while (getchar() != '\n');
     
     int cont = get_size(monticulo);
-
+    //en un ciclo analizará los nombres de los nodos del monticulo hasta encontrar los correspondientes e ingresar el precedente a la lista.
     for(int i=0;i<cont;i++){
         
         aux = get_data(monticulo,i);
@@ -80,12 +79,17 @@ void establecerPrecedencia(Heap *monticulo,Stack* historial){
                 aux2 = get_data(monticulo,f);
         
                 if(strcmp(aux2->nombreTarea,tarea2)==0){
-                    nodoHistorial->ultimaAccion = 2;
-                    nodoHistorial->tarea = aux2;
-                    push(historial, nodoHistorial);
-                    aux2->precedentes = realloc(aux2->precedentes,(aux2->contPrecedentes+1) * sizeof(char[MAXCHAR+1]));
-                    strcpy(aux2->precedentes[aux2->contPrecedentes],tarea1);
-                    aux2->contPrecedentes++;
+                    nodoHistorial2->ultimaAccion = 2;
+                    nodoHistorial2->tarea = aux2;
+                    pushFront(historial, nodoHistorial2);
+                    
+                    if(aux2->hayPrecedentes == false){//se inserta la tarea en al lista de precendentes a la que se le indica
+                    
+                        pushFront(aux2->precedentes,aux);
+                        aux2->hayPrecedentes = true;
+                    }else{
+                        pushCurrent(aux2->precedentes,aux);
+                    }
                     valido=true;
                     return;
                 }
@@ -96,52 +100,9 @@ void establecerPrecedencia(Heap *monticulo,Stack* historial){
         printf("No es posible hacer esto\n");
         return;
     }
-
 }
-
-/*char* copiar_Precedentes(tipoTarea* tarea){
-    char (*copia) = (char*)realloc(tarea->precedentes,(tarea->contPrecedentes+1) * sizeof(char[MAXCHAR+1]));
-
-    for (int i = 0; i < tarea->contPrecedentes; i++){
-        strcpy(copia[i],tarea->precedentes[i]);
-    }
-    return copia;
-}*/
-
+/*Esta funcion ve todos las tareas del monticulo,y las mostrara todas en en orden de menor a mayor por su prioridad*/
 void mostrarTareas(Heap* monticulo){
-
-    /*Heap* copia = heap_clone(monticulo);
-    Heap* copia2 = heap_clone(monticulo);
-     int posicion = 0;
-    while((heap_top(copia))!=NULL){
-
-        tipoTarea* tarea=(tipoTarea*)heap_top(copia);
-        
-        if(tarea->contPrecedentes==0){
-            printf("%d. Tarea%s (Prioridad: %d)\n", posicion+1, tarea->nombreTarea, (tarea->prioridad)*(-1));
-            posicion++;
-        }
-        heap_pop(copia, 0);
-    }
-
-    while((heap_top(copia2))!=NULL){
-
-        tipoTarea* tarea=(tipoTarea*)heap_top(copia);
-        //char *copiaArreglo= copiar_Precedentes(tarea);
-        if(tarea->contPrecedentes!=0){
-            printf("%d. Tarea%s (Prioridad: %d)", posicion+1, tarea->nombreTarea, (tarea->prioridad)*(-1));
-            printf("Precedente(s): ");
-            posicion++;
-            for(int i=0;i<tarea->contPrecedentes;i++){
-                 printf("Tarea %s ", tarea->precedentes[i]);
-            }
-        }
-        heap_pop(copia2, 0);
-    }
-
-    printf("\n");
-    free(copia);
-    free(copia2);*/
 
     Heap* copia = heap_clone(monticulo);
     int size = get_size(monticulo);
@@ -154,10 +115,10 @@ void mostrarTareas(Heap* monticulo){
     int posicion = 0;
 
     printf("Tareas por hacer, ordenadas por prioridad y precedencia:\n\n");
-
+    //lee los sin precedentes
     do {
-        if (aux->contPrecedentes == 0){
-            printf("%d. Tarea%s (Prioridad: %d)\n", posicion+1, aux->nombreTarea, (aux->prioridad));
+        if (aux->hayPrecedentes == false){
+            printf("%d.-Tarea %s (Prioridad: %d)\n", posicion+1, aux->nombreTarea, (aux->prioridad));
             
             posicion++;
         }
@@ -166,26 +127,32 @@ void mostrarTareas(Heap* monticulo){
         aux = heap_top(copia);
     } while (cont < size);
 
-    aux = heap_top(monticulo);
+    Heap* otraCopia = heap_clone(monticulo);
+    
     cont = 0;
-
+    
+    tipoTarea *otroAux = heap_top(otraCopia);
+    //lee los con precedentes
     do {
-        if (aux->contPrecedentes != 0){
+        if (otroAux->hayPrecedentes == true){
+            printf("%d.-Tarea %s (Prioridad: %d)", posicion+1, otroAux->nombreTarea, otroAux->prioridad);
+            printf(" - Precedente(s): ");
             
-            printf("%d. Tarea%s (Prioridad: %d)", posicion, aux->nombreTarea, aux->prioridad);
-            printf("Precedente(s): ");
-            for (int i = 0; i < aux->contPrecedentes; i++){
-                printf("Tarea %s ", aux->precedentes[i]);
+            tipoTarea* nodo=firstList(otroAux->precedentes);
+            
+            while(nodo!=NULL){
+                printf("Tarea %s ",nodo->nombreTarea);
+                nodo=nextList(otroAux->precedentes);
             }
             printf("\n");
             posicion++;
         }
         cont++;
-        heap_pop(monticulo, 0);
-        aux = heap_top(monticulo);
+        heap_pop(otraCopia, 0);
+        otroAux = heap_top(otraCopia);
     } while (cont < size);
 }
-
+/*La esta funcion borrarDePrecedentes borra una tarea de precedente de las demas tareas que la tengan de predecente */
 void borrarDePrecedentes(Heap* monticulo,char* tarea){
 
     int cont=get_size(monticulo);
@@ -194,24 +161,27 @@ void borrarDePrecedentes(Heap* monticulo,char* tarea){
 
         tipoTarea *aux = get_data(monticulo,i);
 
-        if(aux->contPrecedentes!=0){
-
-            for(int c=0;c<aux->contPrecedentes;c++){
-                if(strcmp(aux->precedentes[c],tarea)==0){
-                    for(;c<aux->contPrecedentes;c++){
-                         strcpy(aux->precedentes[c], aux->precedentes[c+1]);
-                    }
-                    aux->contPrecedentes--;
+        if(aux->hayPrecedentes == true){
+            tipoTarea* nodo = firstList(aux->precedentes);
+            while(nodo != NULL){
+                if(strcmp(nodo->nombreTarea,tarea)==0){
+                    popCurrent(aux->precedentes);//borra la tarea de la lista de precedentes
+                    break;
                 }
+                nextList(aux->precedentes);
             }
         }
+        if (firstList(aux->precedentes) == NULL){
+            aux->hayPrecedentes = false;
+        }
     }
+    return;
 }
-
-void marcarTareaCompletada(Heap* monticulo,Stack* historial){
+/*La funcion marcarTareaCompletada busca la tarea indicada en el monticuo para borrarla,y se confirma que sera borrada en caso que tenga precedentes*/
+void marcarTareaCompletada(Heap* monticulo,List* historial){
     
     tipoTarea *aux = malloc(sizeof(tipoTarea));
-    tipoHistorial *nodoHistorial = malloc (sizeof(tipoHistorial));
+    tipoHistorial *nodoHistorial3 = malloc (sizeof(tipoHistorial));
     
     char tarea[MAXCHAR +1];
     bool valido=false;
@@ -222,22 +192,32 @@ void marcarTareaCompletada(Heap* monticulo,Stack* historial){
 
     int cont = get_size(monticulo);
 
-    for(int i=0;i<cont;i++){
+    for(int i=0;i<cont;i++){//recorrer monticulo
 
         aux = get_data(monticulo,i);
     
         if(strcmp(aux->nombreTarea,tarea)==0){
             valido=true;
-            printf("Seguro que quieres borrar la tarea\n");
-            scanf("%2s",respuesta);
-            while (getchar() != '\n');
-            if (!confirmar(respuesta)){
-                printf("No se borro la tarea");
-                return;
+            if (aux->hayPrecedentes){
+                printf("Seguro que quieres borrar la tarea\n");
+                scanf("%2s",respuesta);
+                while (getchar() != '\n');
+                if (!confirmar(respuesta)){
+                    printf("No se borro la tarea");
+                    return;
+                }else{
+                    nodoHistorial3->ultimaAccion = 3;
+                    nodoHistorial3->tarea = aux;
+                    pushFront(historial, nodoHistorial3);
+                    
+                    heap_pop(monticulo,i);//se borra de monticulo
+                    borrarDePrecedentes(monticulo,tarea);//funcion para borrar tarea indicada de precedente de las demas
+                }
             }else{
-                nodoHistorial->ultimaAccion = 3;
-                nodoHistorial->tarea = aux;
-                push(historial, nodoHistorial);
+                nodoHistorial3->ultimaAccion = 3;
+                nodoHistorial3->tarea = aux;
+                pushFront(historial, nodoHistorial3);
+                
                 heap_pop(monticulo,i);
                 borrarDePrecedentes(monticulo,tarea);
             }
@@ -249,49 +229,48 @@ void marcarTareaCompletada(Heap* monticulo,Stack* historial){
     }
 
 }
-
-void deshacerUltimaAccion(Heap* monticulo, Stack* historial){
-    tipoHistorial *ultimo = top(historial);
+/*Esta funcion deshace la ultima accion reemplazando el nodo tipoTarea con la posicion en especifico de el nodo editado anteriormente, en caso de una tarea completada se hace heap_Push para volver a integrarla.*/
+void deshacerUltimaAccion(Heap* monticulo, List* historial){
+    tipoHistorial *ultimo = firstList(historial);
     int cont = get_size(monticulo);
     int indicador = ultimo->ultimaAccion;
 
-    printf("%s", ultimo->tarea->nombreTarea);
-    printf("%d", ultimo->tarea->contPrecedentes);
-    printf("%d", ultimo->tarea->prioridad);
+    // case 1: hubo un agregarTarea; case 2: hubo un establecerPrecedente; case 3: hubo un marcarTareaCompletada
     
+    printf("%d", ultimo->ultimaAccion);
     if (ultimo != NULL){ 
         switch(indicador){
             case 1:
                 {
                     for (int i = 0; i < cont; i++){
                         tipoTarea *aux = get_data(monticulo, i);
-                        if (strcmp(aux->nombreTarea, ultimo->tarea->nombreTarea)){
-                            heap_pop(monticulo,i);
+                        if (strcmp(aux->nombreTarea, ultimo->tarea->nombreTarea) == 0){
+                            heap_pop(monticulo, i);
+                            popCurrent(historial);
+                            break;
                         }
+                        
                     }
-                    pop(historial);
                     break;
                 }
             case 2:
                 {
                     for (int i = 0; i < cont; i++){
                         tipoTarea *aux = get_data(monticulo, i);
-                        if (strcmp(aux->nombreTarea, ultimo->tarea->nombreTarea)){
-                            aux->contPrecedentes--;
+                        if (strcmp(aux->nombreTarea, ultimo->tarea->nombreTarea) == 0){
+                            popBack(aux->precedentes);
+                            if (firstList(aux->precedentes)==NULL) aux->hayPrecedentes = false;
+                            popCurrent(historial);
+                            break;
                         }
+                        
                     }
-                    pop(historial);
                     break;
                 }
             case 3:
                 {
-                    for (int i = 0; i < cont; i++){
-                        tipoTarea *aux = get_data(monticulo, i);
-                        if (strcmp(aux->nombreTarea, ultimo->tarea->nombreTarea)){
-                            heap_push(monticulo, ultimo->tarea, ultimo->tarea->prioridad);
-                        }
-                    }
-                    pop(historial);
+                    heap_push(monticulo, ultimo->tarea, ultimo->tarea->prioridad);
+                    popCurrent(historial);
                     break;
                 }
             default:
@@ -303,9 +282,8 @@ void deshacerUltimaAccion(Heap* monticulo, Stack* historial){
         printf("No han habido acciones anteriores.");
     }
 }
-
-char *gets_csv_field(char *tmp, int k) 
-{
+/*ayuda a leer el archivo*/
+char *gets_csv_field(char *tmp, int k) {
   int open_mark = 0;
   char *ret = (char*) malloc(100 * sizeof(char));
   int ini_i = 0, i = 0;
@@ -357,6 +335,7 @@ char *gets_csv_field(char *tmp, int k)
   
   return NULL;
 }
+/*Esta funcion importa un archivo csv,guarda los datos indicados en una variable auxiiar para luego ser insertado en el monticulo*/
 void importarArchivo(Heap* monticulo) {
     
     char nombreArchivoImport[MAXCHAR + 1];
@@ -372,11 +351,15 @@ void importarArchivo(Heap* monticulo) {
     
     char lineaArchivo[1024];
     fgets(lineaArchivo, 1023, file); // Ignorar la línea de título
+    
     while (fgets(lineaArchivo,1023, file)!=NULL) {
+        
         tipoTarea* tarea = (tipoTarea*) malloc(sizeof(tipoTarea));
+        tarea->precedentes = createList();
+        tarea->hayPrecedentes=false;
         
         for(int i=0;i<3;i++){
-
+            
             char *aux=gets_csv_field(lineaArchivo,i);
             
             if(i==0){
@@ -386,29 +369,43 @@ void importarArchivo(Heap* monticulo) {
             if(i==1){
                 tarea->prioridad=atol(aux);
             }
-            
             if(i==2){
                 if(strlen(aux)>1){
-                    char delimit[]=" \t\r\v\n\f";
-                    char*auxPrecedentes=strtok(aux,delimit);
                     
-                    while(auxPrecedentes!=NULL){
-                        tarea->precedentes = realloc(tarea->precedentes, sizeof(char*) * (tarea->contPrecedentes + 1));
-                        strcpy(tarea->precedentes[tarea->contPrecedentes],auxPrecedentes);
-                        tarea->contPrecedentes++;
-                        auxPrecedentes=strtok(NULL,delimit);
+                    char delimit[]=" \t\r\v\n\f";
+                    char* auxPrecedentes=strtok(aux,delimit);
+                    int cont = get_size(monticulo);
+                    
+                    while (auxPrecedentes != NULL){
+                        
+                        for (int i = 0; i < cont; i++){
+                            
+                            tipoTarea* nodo = get_data(monticulo, i);
+                            
+                            if (strcmp(nodo->nombreTarea, auxPrecedentes)==0){
+                                
+                                if (tarea->hayPrecedentes == false){
+                                    pushFront(tarea->precedentes, nodo);
+                                    tarea->hayPrecedentes = true;     
+                                }else{
+                                    pushCurrent(tarea->precedentes, nodo);
+                                }
+                            }
+                        }
+                        auxPrecedentes=strtok(NULL, delimit);
                     }
                 }
             }
         }
         heap_push(monticulo, tarea, tarea->prioridad);
     }
+    fclose(file);
 }
 
 int main(void){
 
     Heap* monticulo = createHeap();
-    Stack* historial = createStack();
+    List* historial = createList();
    
     int opcionMenu = -1;
    
@@ -452,13 +449,14 @@ int main(void){
                     }
                 case 5: 
                     {
-                        deshacerUltimaAccion(monticulo,historial);
+                       deshacerUltimaAccion(monticulo,historial);
                         break;
                     }
                 case 6: 
+                    { 
                         importarArchivo(monticulo);
                         break;
-                    {
+                    }
                 case 0: 
                     {
                         printf("\nSaliste del menú.");
@@ -468,9 +466,7 @@ int main(void){
                     {
                         printf("No ingreso opción válida.");
                         break;
-                    }
-            }
-             
+                    }  
             }
         opcionMenu=-1;
     }
